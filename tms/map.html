@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.background {
+  fill: #eee;
+  pointer-events: all;
+}
+
+.map-layer {
+  fill: #fff;
+  stroke: #aaa;
+}
+
+path {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: .5px;
+}
+  
+circle {
+  fill: #fff;
+  fill-opacity: 0.4;
+  stroke: #111;
+}
+
+path.active {
+  fill: pink;
+}
+circle.active {
+  fill: blue;
+}
+
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v0.min.js"></script>
+<script>
+
+var width = 960,
+  height = 500,
+  centered;
+
+// Define color scale
+var color = d3.scale.linear()
+  .domain([1, 20])
+  .clamp(true)
+  .range(['#fff', '#409A99']);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// Add background
+svg.append('rect')
+  .attr('class', 'background')
+  .attr('width', width)
+  .attr('height', height)
+
+var g = svg.append('g');
+
+var mapLayer = g.append('g')
+  .classed('map-layer', true);
+
+d3.json('Boundaries - Census Tracts - 2010.geojson', function(error,mapData) {
+ console.log("geojson", mapData);
+  var center = d3.geo.centroid(mapData)
+  var features = mapData.features;
+  var scale  = 150;
+  var offset = [width/2, height/2];
+  var projection = d3.geo.mercator().scale(scale).center(center)
+    .translate(offset);
+
+  var path = d3.geo.path().projection(projection);
+
+  var bounds  = path.bounds(mapData);
+  var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
+  var vscale  = scale*height / (bounds[1][1] - bounds[0][1]);
+  var scale   = (hscale < vscale) ? hscale : vscale;
+  var offset  = [width - (bounds[0][0] + bounds[1][0])/2,
+    height - (bounds[0][1] + bounds[1][1])/2];
+
+  projection = d3.geo.mercator().center(center)
+    .scale(scale).translate(offset);
+  
+  path = path.projection(projection);
+
+  mapLayer.selectAll("path").data(features).enter().append("path")
+    .attr("d", path)
+    .style("fill", "pink")
+    .style("stroke-width", "1")
+    .style("stroke", "black")
+});
+</script>
