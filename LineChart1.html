@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<style type="text/css">
+
+svg {
+  border:1px solid black;
+}
+  
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 10px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
+  
+.ufoGroup text {
+  fill: black; /*grey out text*/
+  font-size: 11px;
+}
+  
+.ufoCircle {
+  fill: blue;
+}
+
+.ufoLine {
+  /*removes black fill*/
+  fill: none;
+  /*styles line */
+  stroke: darkgray;
+  stroke-width: 3   ;
+}
+
+</style>
+
+<body>
+  <div id='titleText'>
+    <text>RideShares by Month in 2019</text>
+  </div>
+  <div id="buttonsDiv"></div>
+</body>
+
+<script>
+  
+  const parseTime = d3.timeParse("%m/%Y");
+  const margin = {top: 35, right: 30, bottom: 20, left: 50};
+  const outerWidth = 700;
+  const outerHeight = 300;
+  const innerWidth = outerWidth - margin.left - margin.right;
+  const innerHeight = outerHeight - margin.top - margin.bottom;
+  const transitionTime = 1000;
+  const radius = 5;
+  
+  const SVG = d3.select("body").append("svg")
+    .attr("width", outerWidth)
+    .attr("height", outerHeight);  
+  
+  const svg = SVG.append('g')
+  	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");  
+  
+  const xScale = d3.scaleTime()
+    .range([0, innerWidth]);
+  
+  const xAxis = d3.axisBottom(xScale)
+    .tickSize(-innerHeight);
+  
+  const yScale = d3.scaleLinear()
+    .range([innerHeight, 0])
+  
+  const yAxis = d3.axisLeft(yScale)
+  	.tickSize(-innerWidth);
+  
+  const xAxisGroup = svg.append("g")
+      .attr("class", "x axis") 
+      .attr("transform", "translate(0," + innerHeight + ")");
+  
+  const yAxisGroup = svg.append("g")
+    .attr("class", "y axis"); //gives group the classes 'y' and 'axis'
+  
+    // RIDE SHARE DATA
+	d3.csv("https://raw.githubusercontent.com/mscheriger/DataVizProject/master/rideShareByMonth2019.csv", function(d) {
+    return {
+      date: d.tripDate,
+      count: +d.tripCount/1000,
+      month: +d.tripDate.split('/')[0],
+      parsedDate: parseTime(d.tripDate),
+      year: parseTime(d.tripDate).getYear() + 1900
+    };
+  }).then(ready);
+  
+function ready(fullData) {
+  
+  const yearList = d3.set(fullData.map(function(d) { return d.year })).values();
+  
+  xScale.domain(d3.extent(fullData, function(d) { return d.parsedDate; }));
+  
+  yScale.domain([0, d3.max(fullData, function(d) { return d.count})]);
+  
+  xAxisGroup.call(xAxis);
+  
+  yAxisGroup.call(yAxis);
+  
+  // Creating a line
+  // More specifically, here we are using d3.line() to create a function. This function will take as input some data. To proporly specify the function, you need to define x & y, which basically means telling the function where exactly to find the x&y values in the data you pass to it.
+  const lineGenerator = d3.line()
+    .x((d) => xScale(d.parsedDate))
+    .y((d) =>  yScale(d.count))
+    .curve(d3.curveCardinal); //makes line 'curvy'
+
+    // This is where we actually draw the line by appending a path element to the svg. A path element's primary attribute is 'd', which is just the output of lineGenerator(data)
+  svg.append('path') 
+    .classed('ufoLine', true)
+    .attr('d', lineGenerator(fullData))
+
+
+  const ufoGroup = svg.selectAll('.ufoGroup')
+    .data(fullData).enter().append('g') 
+    .attr('class', 'ufoGroup')
+    .attr('transform', function(d) { return 'translate(' + xScale(d.parsedDate) + ',' + yScale(d.count) + ')'})
+      .on('mouseenter', function(d) {
+      // define hover events
+      d3.select(this)
+        .select('text')
+        .transition()
+        .duration(0)
+        .style('opacity', 1)
+
+      d3.selectAll('circle')
+        .style('opacity', 0.5)
+
+      d3.select(this)
+        .select('circle')
+        .transition()
+        .ease(d3.easeExpOut)
+        .duration(transitionTime)
+        .attr('r', radius*2)
+        .style('opacity', 1)
+    })
+    .on('mouseleave', function(d) {
+      // define mouseleave events
+      d3.select(this)
+        .select('text')
+        .transition()
+        .style('opacity', 0)
+
+      d3.select(this)
+        .select('circle')
+        .transition()
+        .ease(d3.easeElastic)
+        .duration(transitionTime)
+        .attr('r', radius)
+
+      d3.selectAll('circle')
+        .style('opacity', 1)
+    })
+  
+  ufoGroup.append('circle')
+    .attr('class', 'ufoCircle')
+    .attr('r', radius)
+
+  ufoGroup.append('text')
+    .attr('class', 'ufoText')
+    .attr('dx', 10)
+    .attr('dy', -10)
+    .text(function(d) { return d.count})
+  	.attr('opacity', 0)
+}
+
+
+</script>
+
