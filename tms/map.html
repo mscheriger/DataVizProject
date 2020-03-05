@@ -60,10 +60,13 @@ svg.append('rect')
 
 var g = svg.append('g');
 
-var mapLayer = g.append('g')
+var mapLayer_taxi = g.append('g')
   .classed('map-layer', true);
 
-d3.json('Boundaries - Census Tracts - 2010.geojson', function(error,mapData) {
+var mapLayer_rideshare = g.append('g')
+  .classed('map-layer', true);
+
+d3.json('heatmap.geojson', function(error,mapData) {
  console.log("geojson", mapData);
   var center = d3.geo.centroid(mapData)
   var features = mapData.features;
@@ -86,10 +89,17 @@ d3.json('Boundaries - Census Tracts - 2010.geojson', function(error,mapData) {
   
   path = path.projection(projection);
 
-  mapLayer.selectAll("path").data(features).enter().append("path")
+  mapLayer_taxi.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
     .style("fill", "pink")
     .style("stroke-width", "1")
     .style("stroke", "black")
+
+  mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
+    .attr("d", path)
+    .style("fill", "blue")
+    .style("stroke-width", "1")
+    .style("stroke", "black")
+
 });
 </script>
