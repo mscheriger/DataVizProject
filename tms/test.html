@@ -46,7 +46,8 @@ var width = 960,
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .attr("id","maps");
 
 // Add background
 svg.append('rect')
@@ -63,8 +64,6 @@ var mapLayer_taxi = g.append('g')
 var mapLayer_rideshare = g.append('g')
   .classed('map-layer', true)
   .attr("id", "mapLayer_rideshare")
-
-var current = 'pickup'
 
 d3.json('heatmap.geojson', function(error,mapData) {
   //Taxi Data first
@@ -86,7 +85,7 @@ d3.json('heatmap.geojson', function(error,mapData) {
   var max_ride = d3.max(r_dropoff)
   console.log(max_ride)
   // Add a scale for color
-  var myColor = d3.scale.linear().domain([0,max_ride])
+  var myColor = d3.scale.log().domain([1,max_ride])
       .interpolate(d3.interpolateHcl)
       .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
   
@@ -111,7 +110,6 @@ d3.json('heatmap.geojson', function(error,mapData) {
 
   mapLayer_taxi.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
-    .attr("id", "mapLayer_taxi")
     .style("fill", function (d) {return myColor(d.properties.taxi_pickup);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
@@ -141,58 +139,55 @@ d3.json('heatmap.geojson', function(error,mapData) {
 
   mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
-    .attr("id", "mapLayer_rideshare")
-    .style("fill", function (d) { return myColor(d.properties.rideshare_pickup);} )
+    .style("fill", function (d) { console.log("first"); return myColor(d.properties.rideshare_pickup);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
 
+var current = "pickup"
+  var toggle = (function(){
+        return function(){
+          current = current=="pickup" ? "dropoff" : "pickup";
+          if (current=="pickup"){
+		  console.log(d3.select('#mapLayer_taxi').selectAll("path"))
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_pickup);})
+          	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_pickup);})
+		  d3.select('#taxi_title').text("Number of Pickups - Taxis")
+		  d3.select('#rideshare_title').text("Number of Pickups - Rideshares")
+		  d3.select('#switch_pickup').text("Switch to Dropoff")
+	  }
+          else{
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_dropoff);})
+                  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_dropoff);})
+		  d3.select('#taxi_title').text("Number of Dropoffs - Taxis")
+		  d3.select('#rideshare_title').text("Number of Dropoffs - Rideshares")
+		  d3.select('#switch_pickup').text("Switch to Pickup")
 
+	  }
+	}
+  })();
+
+  svg.append("text")
+     .attr("x",width/3)
+     .attr("y",height/8)
+     .attr("id","taxi_title")
+     .attr("font-weight","bold")
+     .style("fill",'#3182bd')
+     .text("Number of Pickups - Taxis")
+
+  svg.append("text")
+     .attr("x",30)
+     .attr("y",height/8)
+     .attr("id","rideshare_title")
+     .attr("font-weight","bold")
+     .style("fill",'#3182bd')
+     .text("Number of Pickups - Rideshares")
+  
   svg.append("text")
     .attr("x", 2*width/3)             
-    .attr("y", height/8)    
+    .attr("y", height/8)
+    .attr("id","switch_pickup")
     .style("fill", "red")
-    .text("Pickups")
-    .on("click", function(){
-	  mapLayer_taxi.selectAll("path").data(features).enter().append("path")
-	    .attr("d", path)
-    	    .attr("id", "mapLayer_taxi")
-            .style("fill", function (d) {return myColor(d.properties.taxi_pickup);} )
-            .style("stroke-width", "1")
-            .style("stroke", "black")
-
-	  mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
-            .attr("d", path)
-            .attr("id", "mapLayer_taxi")
-            .style("fill", function (d) {return myColor(d.properties.rideshare_pickup);} )
-            .style("stroke-width", "1")
-            .style("stroke", "black")
-
-    })
-
-  svg.append("text")
-    .attr("x", 2*width/3)
-    .attr("y", height/8+15)
-    .style("fill", "Blue")
-    .text("Dropoffs")
-    .on("click", function(){
-	  console.log(mapLayer_taxi)
-	  console.log("Click")
-          mapLayer_taxi.selectAll("path").data(features).enter().append("path")
-            .attr("d", path)
-            .attr("id", "mapLayer_taxi")
-            .style("fill", function (d) {return myColor(d.properties.taxi_dropoff);} )
-            .style("stroke-width", "1")
-            .style("stroke", "black")
-
-          mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
-            .attr("d", path)
-            .attr("id", "mapLayer_taxi")
-            .style("fill", function (d) {return myColor(d.properties.rideshare_dropoff);} )
-            .style("stroke-width", "1")
-            .style("stroke", "black")
-
-
-    }
-  )
+    .text("Switch to Dropoff")
+    .on("click", toggle)
 });
 </script>
