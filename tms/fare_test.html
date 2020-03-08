@@ -65,7 +65,7 @@ var mapLayer_rideshare = g.append('g')
   .classed('map-layer', true)
   .attr("id", "mapLayer_rideshare")
 
-d3.json('heatmap.geojson', function(error,mapData) {
+d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
   //Taxi Data first
   var center = d3.geo.centroid(mapData)
   var features = mapData.features;
@@ -77,17 +77,18 @@ d3.json('heatmap.geojson', function(error,mapData) {
   var r_dropoff = new Array();
 
   for(var i = 0; i < features.length; i++){
-    t_pickup.push(features[i].properties.taxi_pickup)
-    t_dropoff.push(features[i].properties.taxi_dropoff)
-    r_pickup.push(features[i].properties.rideshare_pickup)
-    r_dropoff.push(features[i].properties.rideshare_dropoff)
+    t_pickup.push(features[i].properties["Average Taxi Pickup Fare"])
+    t_dropoff.push(features[i].properties["Average Taxi Dropoff Fare"])
+    r_pickup.push(features[i].properties["Average Rideshare Pickup Fare"])
+    r_dropoff.push(features[i].properties["Average Rideshare Dropoff Fare"])
   }
-  var max_ride = d3.max(r_dropoff)
-  console.log(max_ride)
+  var max_fare = d3.max(t_pickup)
+  var min_fare = d3.min(t_pickup)
+  console.log(min_fare)
   // Add a scale for color
-  var myColor = d3.scale.log().domain([1,max_ride])
+  var myColor = d3.scale.log().domain([min_fare,max_fare])
       .interpolate(d3.interpolateHcl)
-      .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
+      .range([d3.rgb("#dfede9"), d3.rgb('#2a8c70')]);
 
   var offset = [width/2, 2*height/5];
   var projection = d3.geo.mercator().scale(scale).center(center)
@@ -110,7 +111,7 @@ d3.json('heatmap.geojson', function(error,mapData) {
 
   mapLayer_taxi.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
-    .style("fill", function (d) {return myColor(d.properties.taxi_pickup);} )
+    .style("fill", function (d) {return myColor(d.properties["Average Taxi Pickup Fare"]);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
 
@@ -139,7 +140,7 @@ d3.json('heatmap.geojson', function(error,mapData) {
 
   mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
-    .style("fill", function (d) { console.log("first"); return myColor(d.properties.rideshare_pickup);} )
+    .style("fill", function (d) { console.log("first"); return myColor(d.properties["Average Rideshare Pickup Fare"]);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
 
@@ -149,17 +150,17 @@ var current = "pickup"
           current = current=="pickup" ? "dropoff" : "pickup";
           if (current=="pickup"){
 		  console.log(d3.select('#mapLayer_taxi').selectAll("path"))
-                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_pickup);})
-          	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_pickup);})
-		  d3.select('#taxi_title').text("Number of Pickups - Taxis")
-		  d3.select('#rideshare_title').text("Number of Pickups - Rideshares")
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Taxi Pickup Fare"]);})
+          	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Rideshare Pickup Fare"]);})
+		  d3.select('#taxi_title').text("Average Pickup Fares - Taxis")
+		  d3.select('#rideshare_title').text("Average Pickup Fares - Rideshares")
 		  d3.select('#switch_pickup').text("Switch to Dropoff")
 	  }
           else{
-                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_dropoff);})
-                  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_dropoff);})
-		  d3.select('#taxi_title').text("Number of Dropoffs - Taxis")
-		  d3.select('#rideshare_title').text("Number of Dropoffs - Rideshares")
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Taxi Dropoff Fare"]);})
+                  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Rideshare Dropoff Fare"]);})
+		  d3.select('#taxi_title').text("Average Dropoff Fares - Taxis")
+		  d3.select('#rideshare_title').text("Average Dropoff Fares - Rideshares")
 		  d3.select('#switch_pickup').text("Switch to Pickup")
 
 	  }
@@ -172,7 +173,7 @@ var current = "pickup"
      .attr("id","taxi_title")
      .attr("font-weight","bold")
      .style("fill",'#3182bd')
-     .text("Number of Pickups - Taxis")
+     .text("Average Pickup Fares - Taxis")
 
   svg.append("text")
      .attr("x",30)
@@ -180,7 +181,7 @@ var current = "pickup"
      .attr("id","rideshare_title")
      .attr("font-weight","bold")
      .style("fill",'#3182bd')
-     .text("Number of Pickups - Rideshares")
+     .text("Average Pickup Fares - Rideshares")
 
   svg.append("text")
     .attr("x", 2*width/3)
