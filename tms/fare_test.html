@@ -65,7 +65,7 @@ var mapLayer_rideshare = g.append('g')
   .classed('map-layer', true)
   .attr("id", "mapLayer_rideshare")
 
-d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
+d3.json('fare_heatmap_chicagoAllx.geojson', function(error,mapData) {
   //Taxi Data first
   var center = d3.geo.centroid(mapData)
   var features = mapData.features;
