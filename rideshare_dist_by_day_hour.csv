@@ -1,4 +1,4 @@
-day,hour,Trip ID,Trip Miles
+day,hour,count,prop
 0,0,22118,7.61
 0,1,13406,7.14
 0,2,9566,6.91
