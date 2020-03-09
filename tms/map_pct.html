@@ -203,7 +203,7 @@ var current = "pickup"
 
   var colorLegend = d3.legend.color()
     .scale(myColor)
-    .labelFormat(d3.format(".3f"))
+    .cells([.03,.06,.09,.12])
     .shapePadding(5)
     .shapeWidth(50)
     .shapeHeight(20)

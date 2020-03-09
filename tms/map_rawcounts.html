@@ -202,7 +202,8 @@ var current = "pickup"
       .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
 
   var colorLegend = d3.legend.color()
-    .labelFormat(d3.format(".0f"))
+    .labelFormat(d3.format(",.1f"))
+    .cells([1,10,100,1000,10000,100000])
     .scale(colorScale)
     .shapePadding(5)
     .shapeWidth(50)
