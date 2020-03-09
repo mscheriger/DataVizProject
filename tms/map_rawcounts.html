@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+
+
+<div id="legend"></div>
+
 <style>
 
 .background {
@@ -38,6 +42,7 @@ circle.active {
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v0.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3-legend/1.1.0/d3-legend.js"></script>
 <script>
 
 var width = 960,
@@ -139,9 +144,10 @@ d3.json('heatmap.geojson', function(error,mapData) {
 
   mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
     .attr("d", path)
-    .style("fill", function (d) { console.log("first"); return myColor(d.properties.rideshare_pickup);} )
+    .style("fill", function (d) { console.log(d.properties); return myColor(d.properties.rideshare_pickup);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
+
 
 var current = "pickup"
   var toggle = (function(){
@@ -189,5 +195,33 @@ var current = "pickup"
     .style("fill", "red")
     .text("Switch to Dropoff")
     .on("click", toggle)
+
+
+  var colorScale = d3.scale.log().domain([1,max_ride])
+      .interpolate(d3.interpolateHcl)
+      .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
+
+  var colorLegend = d3.legend.color()
+    .labelFormat(d3.format(".0f"))
+    .scale(colorScale)
+    .shapePadding(5)
+    .shapeWidth(50)
+    .shapeHeight(20)
+    .labelOffset(12);
+
+  svg.append("g")
+    .attr("transform", "translate(700, 300)")
+    .attr("id","legend")
+    .call(colorLegend);
+
+  svg.append("text")
+    .attr("transform", "translate(700,280)")
+    .attr("id","legend title")
+    .text("Count of Rides")
+
+  svg.append("text")
+    .attr("transform","translate(50,25)")
+    .attr("font-size","20px")
+    .text("Taxis vs. Rideshares in Chicago - Counts of Rides During XXXX")
 });
 </script>

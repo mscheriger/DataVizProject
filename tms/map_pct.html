@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+
+<div id="legend"></div>
+
+<style>
+
+.background {
+  fill: #eee;
+  pointer-events: all;
+}
+
+.map-layer {
+  fill: #fff;
+  stroke: #aaa;
+}
+
+path {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: .5px;
+}
+
+circle {
+  fill: #fff;
+  fill-opacity: 0.4;
+  stroke: #111;
+}
+
+path.active {
+  fill: pink;
+}
+circle.active {
+  fill: blue;
+}
+
+
+</style>
+<body>
+
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v0.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3-legend/1.1.0/d3-legend.js"></script>
+<script>
+
+var width = 960,
+  height = 500,
+  centered;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("id","maps");
+
+// Add background
+svg.append('rect')
+  .attr('class', 'background')
+  .attr('width', width)
+  .attr('height', height)
+
+var g = svg.append('g');
+
+var mapLayer_taxi = g.append('g')
+  .classed('map-layer', true)
+  .attr("id", "mapLayer_taxi")
+
+var mapLayer_rideshare = g.append('g')
+  .classed('map-layer', true)
+  .attr("id", "mapLayer_rideshare")
+
+d3.json('heatmap.geojson', function(error,mapData) {
+  //Taxi Data first
+  var center = d3.geo.centroid(mapData)
+  var features = mapData.features;
+  var properties = features.properties
+  var scale  = 150;
+  var t_pickup = new Array();
+  var t_dropoff = new Array();
+  var r_pickup = new Array();
+  var r_dropoff = new Array();
+
+  for(var i = 0; i < features.length; i++){
+    t_pickup.push(features[i].properties.taxi_pickup_percent)
+    t_dropoff.push(features[i].properties.taxi_dropoff_percent)
+    r_pickup.push(features[i].properties.rideshare_pickup_percent)
+    r_dropoff.push(features[i].properties.rideshare_dropoff_percent)
+  }
+  var max_ride = d3.max(t_pickup)
+  console.log(d3.max(r_dropoff))
+  console.log(d3.max(r_pickup))
+  console.log(d3.max(t_dropoff))
+  console.log(d3.max(t_pickup))
+
+  // Add a scale for color
+  var myColor = d3.scale.linear().domain([0,max_ride/100])
+      .interpolate(d3.interpolateHcl)
+      .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
+
+  var offset = [width/2, 2*height/5];
+  var projection = d3.geo.mercator().scale(scale).center(center)
+    .translate(offset);
+
+  var path = d3.geo.path().projection(projection);
+
+  var bounds  = path.bounds(mapData);
+  var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
+  var vscale  = scale*height / (bounds[1][1] - bounds[0][1]);
+  var scale   = (hscale < vscale) ? hscale : vscale;
+  var scale   = scale*.7
+  var offset  = [width - (bounds[0][0] + bounds[1][0])/2,
+    height - (bounds[0][1] + bounds[1][1])/2];
+
+  projection = d3.geo.mercator().center(center)
+    .scale(scale).translate(offset);
+
+  path = path.projection(projection);
+
+  mapLayer_taxi.selectAll("path").data(features).enter().append("path")
+    .attr("d", path)
+    .style("fill", function (d) {return myColor(d.properties.taxi_pickup_percent/100);} )
+    .style("stroke-width", "1")
+    .style("stroke", "black")
+
+  var center = d3.geo.centroid(mapData)
+  var features = mapData.features;
+  var scale  = 150;
+  var offset = [8*width/10, 2*height/5];
+  var projection = d3.geo.mercator().scale(scale).center(center)
+    .translate(offset);
+
+  var path = d3.geo.path().projection(projection);
+
+  var bounds  = path.bounds(mapData);
+  var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
+  var vscale  = scale*height / (bounds[1][1] - bounds[0][1]);
+  var scale   = (hscale < vscale) ? hscale : vscale;
+  var scale   = scale*.7
+  var offset  = [width - (bounds[0][0] + bounds[1][0])/2,
+    height - (bounds[0][1] + bounds[1][1])/2];
+
+  projection = d3.geo.mercator().center(center)
+    .scale(scale).translate(offset);
+
+  path = path.projection(projection);
+
+
+  mapLayer_rideshare.selectAll("path").data(features).enter().append("path")
+    .attr("d", path)
+    .style("fill", function (d) { console.log(d.properties); return myColor(d.properties.rideshare_pickup_percent/100);} )
+    .style("stroke-width", "1")
+    .style("stroke", "black")
+
+
+var current = "pickup"
+  var toggle = (function(){
+        return function(){
+          current = current=="pickup" ? "dropoff" : "pickup";
+          if (current=="pickup"){
+		  console.log(d3.select('#mapLayer_taxi').selectAll("path"))
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_pickup_percent/100);})
+          	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_pickup_percent/100);})
+		  d3.select('#taxi_title').text("Percent of Pickups - Taxis")
+		  d3.select('#rideshare_title').text("Percent of Pickups - Rideshares")
+		  d3.select('#switch_pickup').text("Switch to Dropoff")
+	  }
+          else{
+                  d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_dropoff_percent/100);})
+                  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_dropoff_percent/100);})
+		  d3.select('#taxi_title').text("Percent of Dropoffs - Taxis")
+		  d3.select('#rideshare_title').text("Percent of Dropoffs - Rideshares")
+		  d3.select('#switch_pickup').text("Switch to Pickup")
+
+	  }
+	}
+  })();
+
+  svg.append("text")
+     .attr("x",width/3)
+     .attr("y",height/8)
+     .attr("id","taxi_title")
+     .attr("font-weight","bold")
+     .style("fill",'#3182bd')
+     .text("Percent of Pickups - Taxis")
+
+  svg.append("text")
+     .attr("x",30)
+     .attr("y",height/8)
+     .attr("id","rideshare_title")
+     .attr("font-weight","bold")
+     .style("fill",'#3182bd')
+     .text("Percent of Pickups - Rideshares")
+
+  svg.append("text")
+    .attr("x", 2*width/3)
+    .attr("y", height/8)
+    .attr("id","switch_pickup")
+    .style("fill", "red")
+    .text("Switch to Dropoff")
+    .on("click", toggle)
+
+
+  var colorLegend = d3.legend.color()
+    .scale(myColor)
+    .labelFormat(d3.format(".3f"))
+    .shapePadding(5)
+    .shapeWidth(50)
+    .shapeHeight(20)
+    .labelOffset(12);
+
+  svg.append("g")
+    .attr("transform", "translate(700, 300)")
+    .attr("id","legend")
+    .call(colorLegend);
+
+  svg.append("text")
+    .attr("transform", "translate(700,280)")
+    .attr("id","legend title")
+    .text("Percent of Rides")
+
+  svg.append("text")
+    .attr("transform","translate(50,25)")
+    .attr("font-size","20px")
+    .text("Taxis vs. Rideshares in Chicago - Percent of Rides During XXXX")
+});
+</script>
