@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <style>
+      rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;   
+      }
+
+      h1 {
+        font-size: 20pt;
+        font-family: Helvetica neue;
+      }
+
+      div{
+        display:inline-block;
+        padding:0px;
+        margin:0px;
+      }
+
+      text.mono {
+        font-size: 9pt;
+        font-family: Helvetica neue;
+        fill: #aaa;
+      }
+
+      text.axis-workweek {
+        fill: #000;
+      }
+
+      text.axis-worktime {
+        fill: #000;
+      }
+
+      .tooltip {
+        position: absolute;
+        text-align: center;
+        width: 60px;
+        height: 12px;
+        padding: 8px;
+        margin-top: -20px;
+        font: 10px sans-serif;
+        background: #ddd;
+        pointer-events: none;
+      }
+
+      /*https://www.w3schools.com/css/css3_buttons.asp*/
+      .dataset-button {
+        background-color: #08306B; 
+        border: 2px solid #08306B;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        font-family: Helvetica neue;
+        display: inline-block;
+        border-radius: 8px;
+        font-size: 20px;
+      }
+
+    </style>
+    <script src="https://d3js.org/d3.v5.js"></script>
+  </head>
+  <body>
+    <div id="dataset-picker"></div>
+    <div id="charts"></div>
+    <script type="text/javascript">
+
+
+      //TEMPLATE: http://bl.ocks.org/tjdecke/5558084
+
+      //Copyright (c) 2016, Tom May 
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+      var margin = { top: 75, right: 0, bottom: 0, left: 30 },
+          width = 720 - margin.left - margin.right,
+          height = 300 - margin.top - margin.bottom,
+          gridSize = Math.floor(width / 24),
+          legendElementWidth = gridSize*2,
+          buckets = 9,
+          color = d3.scaleSequential(d3.interpolateBlues), // alternatively colorbrewer.YlGnBu[9]
+          days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+          times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"],
+          rideshare_count = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/rideshare_num_rides_by_day_hour.csv",
+          taxi_count = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/taxi_num_rides_by_day_hour.csv",
+          rideshare_fare = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/rideshare_fare_by_day_hour.csv",
+          taxi_fare = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/taxi_fare_by_day_hour.csv",
+          rideshare_dist = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/rideshare_dist_by_day_hour.csv",
+          taxi_dist = "https://raw.githubusercontent.com/mscheriger/DataVizProject/master/taxi_dist_by_day_hour.csv",
+          count_legend = ["0", "0.003", "0.005", "0.007", "0.010", "0.012", "0.014"];
+          fare_legend = ["10.26", "13.05", "15.83", "18.62", "21.41", "24.19", "26.98"];
+          dist_legend = ["2.17", "4.04", "5.91", "7.79", "9.66", "11.53", "13.4"];
+
+
+      var legendPos = {
+                x: 0,
+                y: 0,
+                width: 10,
+                height: height-(gridSize/2)
+            };
+
+      var svg = d3.select("#charts").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var svg2 = d3.select("#charts").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var dayLabels = svg.selectAll(".dayLabel")
+          .data(days)
+          .enter().append("text")
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * gridSize; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+
+      var dayLabels2 = svg2.selectAll(".dayLabel")
+          .data(days)
+          .enter().append("text")
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * gridSize; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+
+      var timeLabels = svg.selectAll(".timeLabel")
+          .data(times)
+          .enter().append("text")
+            .text(function(d) { return d; })
+            .attr("x", function(d, i) { return i * gridSize; })
+            .attr("y", 0)
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+      // var timeLabels2 = svg2.selectAll(".timeLabel")
+      //     .data(times)
+      //     .enter().append("text")
+      //       .text(function(d) { return d; })
+      //       .attr("x", function(d, i) { return i * gridSize; })
+      //       .attr("y", 0)
+      //       .style("text-anchor", "middle")
+      //       .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+      //       .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+      var tooltip = d3.select("body")
+          .append("div")
+          .style("display", "none")
+          .attr("class", "tooltip")
+          .style("width", "60px")
+          .style("height", "40px")
+          .style("position", "absolute")
+          .style("margin-top", "-20px")
+          .style("text-align", "top")
+          .style("background-color", "white")
+          .style("opacity", ".90")
+          .style("padding", "1px");
+
+      var mouseover = function(d) {
+          tooltip
+          .style("display", "inline");
+        }
+
+      var mousemove = function(d) {
+
+
+          tooltip
+            .html(days[d.day] + " " + times[d.hour]+ "<br>" + d3.format(",")(d.count) + " rides " + "<br>"+ d.value + " value")
+            .style("left", (d3.event.pageX + 15) + "px")
+            .style("top", (d3.event.pageY + 10) + "px")
+        }
+
+      var mouseleave = function(d) {
+        tooltip.style("display", "none")
+        }
+
+      var currType = "Proportion of total rides by type";
+
+      var heatmapChart = function(rideshare, taxi, svg1, svg2, type, legendtext) {
+        Promise.all([
+          d3.csv(rideshare,
+        function(d) {
+          return {
+            day: +d.day,
+            hour: +d.hour,
+            count: +d.count,
+            value: +d.prop
+          };
+        }),
+          d3.csv(taxi,
+        function(d) {
+          return {
+            day: +d.day,
+            hour: +d.hour,
+            count: +d.count,
+            value: +d.prop
+          };
+        })
+      ]).then(ready)
+    // files[0] will contain file1.csv
+    // files[1] will contain file2.csv
+
+        .then(ready);
+
+        function ready(data) {
+
+          var rideshare_data = data[0];
+          var taxi_data = data[1];
+
+          var overall_min = d3.min([d3.min(rideshare_data, function(d) { return d.value ;}), d3.min(taxi_data, function(d) { return d.value ;})]);
+          var overall_max = d3.max([d3.max(rideshare_data, function(d) { return d.value ;}), d3.max(taxi_data, function(d) { return d.value ;})]);
+
+
+          var colorScale = d3.scaleQuantile()
+              .domain([overall_min, overall_max])
+              .range([0,0.2,0.4,0.6,0.8,1]);
+
+          //tooltip code combined from: https://www.d3-graph-gallery.com/graph/heatmap_tooltip.html# and https://bl.ocks.org/mbostock/1087001
+
+
+          //make the actual heatmaps using comon color scale
+
+          makeCards(rideshare_data, svg1, colorScale);
+          makeCards(taxi_data, svg2, colorScale);
+
+          //titles
+
+          svg.append("text")
+            .attr("x", 0)             
+            .attr("y", 0 - (margin.top/3))
+            .attr("text-anchor", "left")  
+            .style("font-size", "20px") 
+            .style("font-family", "Helvetica neue")
+            .text("Rideshare");
+
+          svg2.append("text")
+            .attr("x", 0)             
+            .attr("y", 0 - (margin.top/4))
+            .attr("text-anchor", "left")  
+            .style("font-size", "20px") 
+            .style("font-family", "Helvetica neue")
+            .text("Taxi");
+
+          //no legend? allow user to hover for details
+
+          var legend = svg2.selectAll(".legend")
+              .data(colorScale.range())
+              .enter()
+              .append("g")
+              .attr("class", "legend")
+              .attr("transform", function(d, i) { return "translate(" + legendPos.x + i * legendElementWidth + "," + legendPos.height + ")"; });
+
+
+          legend.append("rect")
+            .attr("width", legendElementWidth)
+            .attr("height", gridSize / 2)
+            .style("fill", function(d) {return color(d);});
+
+
+          console.log(colorScale.invertExtent(0));
+          console.log(colorScale.invertExtent(0.2));
+          console.log(colorScale.invertExtent(0.4));
+          console.log(colorScale.invertExtent(0.6));
+          console.log(colorScale.invertExtent(0.8));
+          console.log(colorScale.invertExtent(1));
+
+          var legend_text = svg2.selectAll(".legend")
+            .append("text")
+            .data(legendtext)
+            .attr("x", function(d, i) {return (legendPos.x + i);})
+            .attr("y", 0)
+            .attr("class", "mono")
+            .text(function(d, i) { return d; });
+            
+
+          legend.exit().remove();
+        };  
+      };
+      
+      function makeCards(data, svg, colorScale) {
+
+          var cards = svg.selectAll(".hour")
+              .data(data, function(d) {return d.day+':'+d.hour;});
+
+          //cards.append("title");
+
+          cards.enter().append("rect")
+              .attr("x", function(d) { return (d.hour) * gridSize; })
+              .attr("y", function(d) { return (d.day) * gridSize; })
+              .attr("rx", 4)
+              .attr("ry", 4)
+              .attr("class", "hour bordered")
+              .attr("width", gridSize)
+              .attr("height", gridSize)
+              .style("fill", function(d) { return color(colorScale(d.value)); })
+              .on("mouseover", mouseover)
+              .on("mousemove", mousemove)
+              .on("mouseleave", mouseleave);
+
+          cards.transition().duration(1250)
+              .style("fill", function(d) { return color(colorScale(d.value)); });
+
+          //cards.select("title").text(function(d) { return d.value; });
+          
+          cards.exit().remove();
+      };
+
+      //change chart title based on data type
+      //https://stackoverflow.com/questions/21843667/d3-change-text-label-when-data-updates
+      
+
+      // var myText2 = svg2.append("text")
+      //     .attr("x", 0)             
+      //     .attr("y", 0 - (margin.top / 2))
+      //     .attr("text-anchor", "left")  
+      //     .style("font-size", "16px") 
+      //     .style("font-family", "Helvetica neue")
+      //     .text(currType);
+
+
+      function redrawText(textobj) {
+          textobj
+          .transition()
+          .duration(250)
+          .style("opacity", 0)
+          .transition().duration(1000)
+          .style("opacity", 1)
+          .text(currType)
+      }
+
+
+
+
+      heatmapChart(rideshare_count, taxi_count, svg, svg2, "Count",count_legend);
+      
+      var datasetpicker = d3.select("#dataset-picker")
+      .selectAll(".dataset-button")
+      .data(["Count", "Fare", "Distance"]);
+
+      datasetpicker.enter()
+        .append("input")
+        .attr("value", function(d){ return d })
+        .attr("type", "button")
+        .attr("class", "dataset-button")
+        .on("click", function(d) {
+          if (d == "Count") {
+            heatmapChart(rideshare_count, taxi_count, svg, svg2, "Count", count_legend);
+            currType = "Proportion of total rides by type";
+            redrawText(myText1);
+            //redrawText(myText2);
+          }
+          else if (d == "Fare") {
+            heatmapChart(rideshare_fare, taxi_fare, svg, svg2, "Fare", fare_legend);
+            currType = "Average fare ($)";
+            redrawText(myText1);
+            //redrawText(myText2);
+          }
+          else if (d == "Distance") {
+            heatmapChart(rideshare_dist, taxi_dist, svg, svg2, "Distance", dist_legend);
+            currType = "Average distance (mi.)";
+            redrawText(myText1);
+            //redrawText(myText2);
+          }
+        });
+
+        var staticLabel = d3.select("#dataset-picker").append('text')
+            .attr("x", 0)             
+            .attr("y", 0 - (margin.top / 2))
+            .attr("text-anchor", "left")  
+            .style("font-size", "16px") 
+            .style("font-family", "Helvetica neue")
+            .text("      Currently displaying: ")
+
+        var myText1 = d3.select("#dataset-picker").append('text')
+            .attr("x", 0)             
+            .attr("y", 0 - (margin.top / 2))
+            .attr("text-anchor", "left")  
+            .style("font-size", "16px") 
+            .style("font-family", "Helvetica neue")
+            .text(currType);
+
+        var formatFrac = d3.format(".3f")
+
+    </script>
+  </body>
+</html>
