@@ -1,4 +1,4 @@
-day,hour,Trip ID,Fare
+day,hour,count,prop
 0,0,22118,12.19
 0,1,13406,11.75
 0,2,9566,11.26
