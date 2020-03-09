@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<style type="text/css">
+
+svg {
+  border:1px solid black;
+}
+  
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 10px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
+  
+/* RIDESHARE Styles */
+  
+.rideCar {
+  fill: blue;
+  stroke: black;
+}
+
+/* TAXI Styles */
+  
+.taxiCar {
+  fill: yellow;
+  stroke: black;
+}
+
+.legend {
+  fill: white;
+  stroke: black;
+}
+
+</style>
+
+<body>
+  <div>
+    <input name="alterButton" 
+           type="button" 
+           value="Go!" 
+           onclick="goCars()" />
+    </div>
+</body>
+
+<script>
+  
+  const parseTime = d3.timeParse("%m/%Y");
+  const margin = {top: 35, right: 30, bottom: 40, left: 60};
+  const outerWidth = 600;
+  const outerHeight = 1500 / 2 ;
+  const innerWidth = outerWidth - margin.left - margin.right;
+  const innerHeight = outerHeight - margin.top - margin.bottom;
+  const transitionTime = 1000;
+  const radius = 2;
+  const legendWidth = 100
+  const legendHeight = 60
+
+  
+  const SVG = d3.select("body").append("svg")
+    .attr("width", outerWidth)
+    .attr("height", outerHeight);  
+
+  // Legend title
+  SVG.append("text")
+      .attr('x', innerWidth/2)
+      .attr("y", margin.top/2)
+      .text("Average Trip Duration & Distance")
+      .attr("text-anchor", "middle")
+
+    // X AXIS LABEL
+  SVG.append("text")             
+    .attr("transform",
+          "translate(" + (innerWidth/2) + " ," + 
+                         (innerHeight + margin.bottom*1.6) + ")")
+    .style("text-anchor", "middle")
+    .text("Each Dot = 1,000 Trips");
+
+  // Y AXIS LABEL
+  SVG.append("text")
+    .attr("y", margin.left/8 - 5)
+    .attr("x", margin.bottom/2-innerHeight/1.5 )
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Ride Count (Thousands)");
+
+  // ---------------------------//
+  //         DEFINING DATA      //
+  // ---------------------------//
+     
+// TAXI DATA
+
+let numberColumns = 40
+let numberTaxiRows = 36 / 2
+let taxiData = []
+
+for (let outerStep = 1; outerStep <= numberTaxiRows; outerStep++){
+
+  for (let step = 1; step <= numberColumns; step++) {
+    taxiData.push({column:step, row:outerStep})
+  }
+
+}
+// Adding the leftover 10 cars
+for (let i = 1; i <=10; i++){
+  taxiData.push({column:i, row:numberTaxiRows+1})
+}
+
+// RIDE DATA
+
+let numberRideRows = 238 / 2
+let rideData = []
+
+for (let outerStep = 1; outerStep <= numberRideRows; outerStep++){
+
+  for (let step = 1; step <= numberColumns; step++) {
+    rideData.push({column:step, row:outerStep})
+  }
+
+}
+// Adding the leftover 10 cars
+for (let i = 1; i <=10; i++){
+  rideData.push({column:i, row:numberRideRows+1})
+}
+
+
+
+  // ---------------------------//
+  //         ANIMATION          //
+  // ---------------------------//
+
+// TAXIS
+
+SVG.selectAll('.taxiCar')
+    .data(taxiData)
+    .enter()
+    .append('circle')
+    .attr('r', radius)
+    .attr('cy', (d) => outerHeight - 20 - d.row*6)
+    .attr('cx', -20)
+    .classed('taxiCar',true)
+
+SVG.selectAll('.taxiCar')
+    .data(taxiData)
+    .transition()
+    .duration(600)
+    .delay((d, i) => i*2)
+    .ease(d3.easeQuadIn)
+    .attr('cx',(d) => d.column*6)
+
+// RIDES    
+
+SVG.selectAll('.rideCar')
+    .data(rideData)
+    .enter()
+    .append('circle')
+    .attr('r', radius)
+    .attr('cy', (d) => outerHeight - 20 - d.row*6)
+    .attr('cx', outerWidth+20)
+    .classed('rideCar',true)
+
+SVG.selectAll('.rideCar')
+    .data(rideData)
+    .transition()
+    .duration(600)
+    .delay((d, i) => i*2)
+    .ease(d3.easeQuadIn)
+    .attr('cx',(d) => outerWidth -50 - d.column*6)
+
+  // ---------------------------//
+  //         LEGEND             //
+  // ---------------------------//
+
+  // // LEGEND
+  // const legend = SVG.append('rect')
+  //   .attr('width', legendWidth)
+  //   .attr('height', legendHeight)
+  //   .attr('x', innerWidth-20)
+  //   .attr('y', innerHeight/2)
+  //   .classed('legend', true)
+
+  // // ADDING LEGEND RECTANGLES
+  // SVG.append('rect')
+  //   .attr('y', innerHeight/2 + legendHeight/3 -5)
+  //   .attr('x', innerWidth-15)
+  //   .attr('width', 10)
+  //   .attr('height', 10)
+  //   .style('fill','blue')
+  //   .style('stroke','black')
+
+  // SVG.append('rect')
+  //   .attr('y', innerHeight/2 + legendHeight*2/3 -5)
+  //   .attr('x', innerWidth-15)
+  //   .attr('width', 10)
+  //   .attr('height', 10)
+  //   .style('fill','yellow')
+  //   .style('stroke','black')
+
+  //   // ADDING LEGEND TEXT
+  // SVG.append('text')
+  //   .attr('y', innerHeight/2 + legendHeight/3 +5)
+  //   .attr('x', innerWidth)
+  //   .text('RideShares')
+  //   .style('fill','black')
+
+  // SVG.append('text')
+  //   .attr('y', innerHeight/2 + legendHeight*2/3 +5)
+  //   .attr('x', innerWidth)
+  //   .text('Taxi')
+  //   .style('fill','black')
+
+
+</script>
+

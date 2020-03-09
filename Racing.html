@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<style type="text/css">
+
+svg {
+  border:1px solid black;
+}
+  
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 10px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
+  
+/* RIDESHARE Styles */
+  
+.rideCar {
+  fill: blue;
+  stroke: black;
+}
+
+/* TAXI Styles */
+  
+.taxiCar {
+  fill: yellow;
+  stroke: black;
+}
+
+.taxiLine {
+  /*removes black fill*/
+  fill: none;
+  /*styles line */
+  stroke: darkgray;
+  stroke-width: 3   ;
+}
+
+.legend {
+  fill: white;
+  stroke: black;
+}
+
+</style>
+
+<body>
+  <div>
+    <input name="alterButton" 
+           type="button" 
+           value="Go!" 
+           onclick="goCars()" />
+    </div>
+</body>
+
+<script>
+  
+  const parseTime = d3.timeParse("%m/%Y");
+  const margin = {top: 35, right: 30, bottom: 40, left: 60};
+  const outerWidth = 700;
+  const outerHeight = 350;
+  const innerWidth = outerWidth - margin.left - margin.right;
+  const innerHeight = outerHeight - margin.top - margin.bottom;
+  const transitionTime = 1000;
+  const radius = 5;
+  const legendWidth = 100
+  const legendHeight = 60
+
+  // DISTANCES & TIMES
+  const taxiTime = 9000
+  const taxiDistance = 3.68
+  const rideTime = 11000
+  const rideDistance = 6.26
+
+  // LINE VARIABLES
+  const lineLength = 400
+  const taxiStartY = 200
+  const rideStartY = 120
+  const lineStartX = 100
+
+  const finishLineLength = 20
+
+  // CAR VARIABLES
+  const carHeight = 20
+  const carWidth = 50
+
+  let xScale = d3.scaleLinear()
+                  .domain([0, d3.max([taxiDistance,rideDistance])])
+                  .range([0, lineLength])
+
+
+
+  
+  const SVG = d3.select("body").append("svg")
+    .attr("width", outerWidth)
+    .attr("height", outerHeight);  
+
+  // Legend title
+  SVG.append("text")
+      .attr('x', innerWidth/2)
+      .attr("y", margin.top/2)
+      .text("Average Trip Duration & Distance")
+      .attr("text-anchor", "middle")
+
+    // X AXIS LABEL
+  SVG.append("text")             
+    .attr("transform",
+          "translate(" + (innerWidth/2) + " ," + 
+                         (innerHeight + margin.bottom*1.6) + ")")
+    .style("text-anchor", "middle")
+    .text("Distance Traveled");
+
+  // Y AXIS LABEL
+  SVG.append("text")
+    .attr("y", margin.left/8 - 5)
+    .attr("x", margin.bottom/2-innerHeight/1.5 )
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Ride Count (Thousands)");
+
+  // ---------------------------//
+  //         TRACKS             //
+  // ---------------------------//
+     
+// TAXI LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", taxiStartY)      // y position of the first end of the line
+    .attr("x2", lineStartX+xScale(taxiDistance))     // x position of the second end of the line
+    .attr("y2", taxiStartY);
+
+
+// RIDE LINE
+ 
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", rideStartY)      // y position of the first end of the line
+    .attr("x2", lineStartX+xScale(rideDistance)) // x position of the second end of the line
+    .attr("y2", rideStartY);
+
+
+
+  // ---------------------------//
+  //  START & FINISH LINES      //
+  // ---------------------------//
+
+// TAXI START LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", taxiStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX)     // x position of the second end of the line
+    .attr("y2", taxiStartY+finishLineLength/2);
+
+// TAXI FINISH LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX + xScale(taxiDistance))     // x position of the first end of the line
+    .attr("y1", taxiStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX + xScale(taxiDistance))     // x position of the second end of the line
+    .attr("y2", taxiStartY+finishLineLength/2);
+
+// RIDE START LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", rideStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX)     // x position of the second end of the line
+    .attr("y2", rideStartY+finishLineLength/2);
+
+// RIDE FINISH LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX + xScale(rideDistance))     // x position of the first end of the line
+    .attr("y1", rideStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX + xScale(rideDistance))     // x position of the second end of the line
+    .attr("y2", rideStartY+finishLineLength/2);
+
+  // ---------------------------//
+  //         CARS               //
+  // ---------------------------//
+
+// TAXI CAR
+
+SVG.append('rect')
+    .attr('x', lineStartX - carWidth)
+    .attr('y', taxiStartY - carHeight/2)
+    .attr('width', carWidth)
+    .attr('height', carHeight)
+    .classed('taxiCar',true)
+    .style('fill','yellow')
+
+// RIDE CAR
+
+SVG.append('rect')
+    .attr('x', lineStartX - carWidth)
+    .attr('y', rideStartY - carHeight/2)
+    .attr('width', carWidth)
+    .attr('height', carHeight)
+    .classed('rideCar',true)
+    .style('fill','blue')
+
+  // ---------------------------//
+  //         ANIMATION          //
+  // ---------------------------//
+
+  function goCars() {
+
+    // TAXI GO
+
+      SVG.select('.taxiCar')
+          .attr('x', lineStartX - carWidth )
+
+      SVG.select('.taxiCar')
+            .transition()
+            .duration(taxiTime)
+            .ease(d3.easeLinear)
+            .attr('x', lineStartX + xScale(taxiDistance) - carWidth )
+
+    // RIDE GO
+
+      SVG.select('.rideCar')
+          .attr('x', lineStartX - carWidth )
+
+      SVG.select('.rideCar')
+            .transition()
+            .duration(rideTime)
+            .ease(d3.easeLinear)
+            .attr('x', lineStartX + xScale(rideDistance) - carWidth )
+
+  
+  }
+
+
+  // ---------------------------//
+  //         LEGEND             //
+  // ---------------------------//
+
+  // LEGEND
+  const legend = SVG.append('rect')
+    .attr('width', legendWidth)
+    .attr('height', legendHeight)
+    .attr('x', innerWidth-20)
+    .attr('y', innerHeight/2)
+    .classed('legend', true)
+
+  // ADDING LEGEND RECTANGLES
+  SVG.append('rect')
+    .attr('y', innerHeight/2 + legendHeight/3 -5)
+    .attr('x', innerWidth-15)
+    .attr('width', 10)
+    .attr('height', 10)
+    .style('fill','blue')
+    .style('stroke','black')
+
+  SVG.append('rect')
+    .attr('y', innerHeight/2 + legendHeight*2/3 -5)
+    .attr('x', innerWidth-15)
+    .attr('width', 10)
+    .attr('height', 10)
+    .style('fill','yellow')
+    .style('stroke','black')
+
+    // ADDING LEGEND TEXT
+  SVG.append('text')
+    .attr('y', innerHeight/2 + legendHeight/3 +5)
+    .attr('x', innerWidth)
+    .text('RideShares')
+    .style('fill','black')
+
+  SVG.append('text')
+    .attr('y', innerHeight/2 + legendHeight*2/3 +5)
+    .attr('x', innerWidth)
+    .text('Taxi')
+    .style('fill','black')
+
+
+</script>
+
