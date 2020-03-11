@@ -8,7 +8,17 @@
 svg {
   border:1px solid black;
 }
-  
+ 
+
+
+text {
+  font-family: "Helvetica Neue" 
+}
+
+.titleText {
+  font-size: : "Helvetica Neue" 
+}
+
 .axis line {
   stroke-width:1px;
   stroke: #ccc;
@@ -27,15 +37,19 @@ svg {
 /* RIDESHARE Styles */
   
 .rideCar {
-  fill: blue;
-  stroke: black;
+/*  fill: blue;
+  stroke: black;*/
+  font-size: 5px
 }
 
 /* TAXI Styles */
   
 .taxiCar {
-  fill: yellow;
-  stroke: black;
+/*  fill: yellow;
+  stroke: black;*/
+
+font-size: 5px
+
 }
 
 .legend {
@@ -56,16 +70,17 @@ svg {
 
 <script>
   
-  const parseTime = d3.timeParse("%m/%Y");
-  const margin = {top: 35, right: 30, bottom: 40, left: 60};
+  const margin = {top: 40, right: 30, bottom: 10, left: 5};
   const outerWidth = 600;
-  const outerHeight = 1500 / 2 ;
+  const outerHeight = 750;
   const innerWidth = outerWidth - margin.left - margin.right;
   const innerHeight = outerHeight - margin.top - margin.bottom;
   const transitionTime = 1000;
   const radius = 2;
   const legendWidth = 100
   const legendHeight = 60
+
+  const durationTime = 800
 
   
   const SVG = d3.select("body").append("svg")
@@ -74,26 +89,30 @@ svg {
 
   // Legend title
   SVG.append("text")
-      .attr('x', innerWidth/2)
+      .attr('x', margin.left)
       .attr("y", margin.top/2)
-      .text("Average Trip Duration & Distance")
-      .attr("text-anchor", "middle")
+      .text("In October alone, there were ")
+      .classed('titleText', true)
+
+  SVG.append("text")
+    .attr('x', margin.left)
+    .attr("y", margin.top)
+    .text("9.5 million ride shares ")
+    .classed('titleText', true)
+
+    SVG.append("text")
+    .attr('x', margin.left)
+    .attr("y", margin.top*3/2)
+    .text("vs. 1.45 million taxi trips")
+    .classed('titleText', true)
 
     // X AXIS LABEL
   SVG.append("text")             
     .attr("transform",
           "translate(" + (innerWidth/2) + " ," + 
-                         (innerHeight + margin.bottom*1.6) + ")")
+                         (outerHeight - margin.bottom + 5) + ")")
     .style("text-anchor", "middle")
-    .text("Each Dot = 1,000 Trips");
-
-  // Y AXIS LABEL
-  SVG.append("text")
-    .attr("y", margin.left/8 - 5)
-    .attr("x", margin.bottom/2-innerHeight/1.5 )
-    .attr("dy", "1em")
-    .style("text-anchor", "middle")
-    .text("Ride Count (Thousands)");
+    .text("🚕 = 🚙 = 1,000 Trips");
 
   // ---------------------------//
   //         DEFINING DATA      //
@@ -140,85 +159,51 @@ for (let i = 1; i <=10; i++){
   //         ANIMATION          //
   // ---------------------------//
 
+function goCars() {
+
 // TAXIS
+
+SVG.selectAll('.taxiCar').remove()
 
 SVG.selectAll('.taxiCar')
     .data(taxiData)
     .enter()
-    .append('circle')
-    .attr('r', radius)
-    .attr('cy', (d) => outerHeight - 20 - d.row*6)
-    .attr('cx', -20)
+    .append('text')
+    .attr('y', (d) => innerHeight +margin.top -10 - d.row*6)
+    .attr('x', -20)
+    .text('🚕')
     .classed('taxiCar',true)
 
 SVG.selectAll('.taxiCar')
     .data(taxiData)
     .transition()
-    .duration(600)
+    .duration(durationTime)
     .delay((d, i) => i*2)
     .ease(d3.easeQuadIn)
-    .attr('cx',(d) => d.column*6)
+    .attr('x',(d) => d.column*6.5)
 
 // RIDES    
+
+SVG.selectAll('.rideCar').remove()
 
 SVG.selectAll('.rideCar')
     .data(rideData)
     .enter()
-    .append('circle')
-    .attr('r', radius)
-    .attr('cy', (d) => outerHeight - 20 - d.row*6)
-    .attr('cx', outerWidth+20)
+    .append('text')
+    .attr('y', (d) => innerHeight +margin.top -10 - d.row*6)
+    .attr('x', outerWidth+20)
+    .text('🚙')
     .classed('rideCar',true)
 
 SVG.selectAll('.rideCar')
     .data(rideData)
     .transition()
-    .duration(600)
+    .duration(durationTime)
     .delay((d, i) => i*2)
     .ease(d3.easeQuadIn)
-    .attr('cx',(d) => outerWidth -50 - d.column*6)
+    .attr('x',(d) => outerWidth - 50 - d.column*6.5)
 
-  // ---------------------------//
-  //         LEGEND             //
-  // ---------------------------//
-
-  // // LEGEND
-  // const legend = SVG.append('rect')
-  //   .attr('width', legendWidth)
-  //   .attr('height', legendHeight)
-  //   .attr('x', innerWidth-20)
-  //   .attr('y', innerHeight/2)
-  //   .classed('legend', true)
-
-  // // ADDING LEGEND RECTANGLES
-  // SVG.append('rect')
-  //   .attr('y', innerHeight/2 + legendHeight/3 -5)
-  //   .attr('x', innerWidth-15)
-  //   .attr('width', 10)
-  //   .attr('height', 10)
-  //   .style('fill','blue')
-  //   .style('stroke','black')
-
-  // SVG.append('rect')
-  //   .attr('y', innerHeight/2 + legendHeight*2/3 -5)
-  //   .attr('x', innerWidth-15)
-  //   .attr('width', 10)
-  //   .attr('height', 10)
-  //   .style('fill','yellow')
-  //   .style('stroke','black')
-
-  //   // ADDING LEGEND TEXT
-  // SVG.append('text')
-  //   .attr('y', innerHeight/2 + legendHeight/3 +5)
-  //   .attr('x', innerWidth)
-  //   .text('RideShares')
-  //   .style('fill','black')
-
-  // SVG.append('text')
-  //   .attr('y', innerHeight/2 + legendHeight*2/3 +5)
-  //   .attr('x', innerWidth)
-  //   .text('Taxi')
-  //   .style('fill','black')
+}
 
 
 </script>
