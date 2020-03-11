@@ -7,7 +7,7 @@
 <style>
 
 .background {
-  fill: #eee;
+  fill: #fff; 
   pointer-events: all;
 }
 
@@ -34,10 +34,22 @@ path.active {
 circle.active {
   fill: blue;
 }
+.dataset-button {
+  background-color: #08306B;
+  border: 2px solid #08306B;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-family: Helvetica;
+  display: inline-block;
+  border-radius: 8px;
+  font-size: 20px;
+}
 
 
 </style>
 <body>
+<div id="dataset-picker"></div>
 
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v0.min.js"></script>
@@ -96,7 +108,7 @@ d3.json('heatmap.geojson', function(error,mapData) {
   // Add a scale for color
   var myColor = d3.scale.linear().domain([0,max_ride/100])
       .interpolate(d3.interpolateHcl)
-      .range([d3.rgb("#deebf7"), d3.rgb('#3182bd')]);
+      .range([d3.rgb("#deebf7"), d3.rgb('#08306B')]);
 
   var offset = [width/2, 2*height/5];
   var projection = d3.geo.mercator().scale(scale).center(center)
@@ -163,14 +175,12 @@ var current = "pickup"
           	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_pickup_percent/100);})
 		  d3.select('#taxi_title').text("Percent of Pickups - Taxis")
 		  d3.select('#rideshare_title').text("Percent of Pickups - Rideshares")
-		  d3.select('#switch_pickup').text("Switch to Dropoff")
 	  }
           else{
                   d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties.taxi_dropoff_percent/100);})
                   d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties.rideshare_dropoff_percent/100);})
 		  d3.select('#taxi_title').text("Percent of Dropoffs - Taxis")
 		  d3.select('#rideshare_title').text("Percent of Dropoffs - Rideshares")
-		  d3.select('#switch_pickup').text("Switch to Pickup")
 
 	  }
 	}
@@ -181,25 +191,29 @@ var current = "pickup"
      .attr("y",height/8)
      .attr("id","taxi_title")
      .attr("font-weight","bold")
-     .style("fill",'#3182bd')
-     .text("Percent of Pickups - Taxis")
+     .style("fill",'#08306B')
+     .attr("font-family", "Helvetica")
+     .text("Proportion of Pickups - Taxis")
 
   svg.append("text")
      .attr("x",30)
      .attr("y",height/8)
      .attr("id","rideshare_title")
      .attr("font-weight","bold")
-     .style("fill",'#3182bd')
-     .text("Percent of Pickups - Rideshares")
+     .attr("font-family", "Helvetica")
+     .style("fill",'#08306B')
+     .text("Proportion of Pickups - Rideshares")
 
-  svg.append("text")
-    .attr("x", 2*width/3)
-    .attr("y", height/8)
-    .attr("id","switch_pickup")
-    .style("fill", "red")
-    .text("Switch to Dropoff")
-    .on("click", toggle)
+ var datasetpicker = d3.select("#dataset-picker")
+      .selectAll(".dataset-button")
+      .data(["Switch Dropoff/Pickup"]);
 
+      datasetpicker.enter()
+        .append("input")
+        .attr("value", function(d){ return d })
+        .attr("type", "button")
+        .attr("class", "dataset-button")
+        .on("click",toggle)
 
   var colorLegend = d3.legend.color()
     .scale(myColor)
@@ -217,11 +231,13 @@ var current = "pickup"
   svg.append("text")
     .attr("transform", "translate(700,280)")
     .attr("id","legend title")
-    .text("Percent of Rides")
+    .attr("font-family", "Helvetica")
+    .text("Proportion of Rides")
 
   svg.append("text")
-    .attr("transform","translate(50,25)")
+    .attr("transform","translate(20,25)")
     .attr("font-size","20px")
-    .text("Taxis vs. Rideshares in Chicago - Percent of Rides During XXXX")
+    .attr("font-family", "Helvetica")
+    .text("Taxis vs. Rideshares in Chicago - Proportion of Rides October 2019")
 });
 </script>
