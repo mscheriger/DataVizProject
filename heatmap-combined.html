@@ -179,7 +179,7 @@
 
 
           tooltip
-            .html(days[d.day] + " " + times[d.hour]+ "<br>" + d3.format(",")(d.count) + " rides " + "<br>"+ d.value + " value")
+            .html(days[d.day] + " " + times[d.hour]+ "<br>" + d3.format(",")(d.count) + " rides " + "<br>"+ d.value)
             .style("left", (d3.event.pageX + 15) + "px")
             .style("top", (d3.event.pageY + 10) + "px")
         }
@@ -271,23 +271,33 @@
             .style("fill", function(d) {return color(d);});
 
 
-          console.log(colorScale.invertExtent(0));
-          console.log(colorScale.invertExtent(0.2));
-          console.log(colorScale.invertExtent(0.4));
-          console.log(colorScale.invertExtent(0.6));
-          console.log(colorScale.invertExtent(0.8));
-          console.log(colorScale.invertExtent(1));
+          // console.log(colorScale.invertExtent(0));
+          // console.log(colorScale.invertExtent(0.2));
+          // console.log(colorScale.invertExtent(0.4));
+          // console.log(colorScale.invertExtent(0.6));
+          // console.log(colorScale.invertExtent(0.8));
+          // console.log(colorScale.invertExtent(1));
 
           var legend_text = svg2.selectAll(".legend")
             .append("text")
             .data(legendtext)
             .attr("x", function(d, i) {return (legendPos.x + i);})
             .attr("y", 0)
-            .attr("class", "mono")
-            .text(function(d, i) { return d; });
-            
+            .attr("class", "mono legend-text")
+            .text(function(d, i) { return d; })
+            .style("opacity", 0)
+            .transition().duration(1250).style("opacity", 1);
 
-          legend.exit().remove();
+
+         // legend_text.transition()
+         //  .duration(250)
+         //  .style("opacity", 0)
+         //  .transition().duration(1000)
+         //  .style("opacity", 1)
+         //  .text(function(d, i) { return d; });
+
+          //legend_text.exit().remove();
+          
         };  
       };
       
@@ -331,7 +341,7 @@
       //     .style("font-family", "Helvetica neue")
       //     .text(currType);
 
-
+      //https://stackoverflow.com/questions/21843667/d3-change-text-label-when-data-updates
       function redrawText(textobj) {
           textobj
           .transition()
@@ -358,18 +368,21 @@
         .attr("class", "dataset-button")
         .on("click", function(d) {
           if (d == "Count") {
+            svg2.selectAll(".legend-text").transition().duration(1250).style("opacity", 0);
             heatmapChart(rideshare_count, taxi_count, svg, svg2, "Count", count_legend);
             currType = "Proportion of total rides by type";
             redrawText(myText1);
             //redrawText(myText2);
           }
           else if (d == "Fare") {
+            svg2.selectAll(".legend-text").transition().duration(1250).style("opacity", 0);
             heatmapChart(rideshare_fare, taxi_fare, svg, svg2, "Fare", fare_legend);
             currType = "Average fare ($)";
             redrawText(myText1);
             //redrawText(myText2);
           }
           else if (d == "Distance") {
+            svg2.selectAll(".legend-text").transition().duration(1250).style("opacity", 0);
             heatmapChart(rideshare_dist, taxi_dist, svg, svg2, "Distance", dist_legend);
             currType = "Average distance (mi.)";
             redrawText(myText1);
