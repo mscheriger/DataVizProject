@@ -80,7 +80,7 @@ font-size: 40px
   const innerHeight = outerHeight - margin.top - margin.bottom;
   const transitionTime = 1000;
   const radius = 5;
-  const legendWidth = 130
+  const legendWidth = 150
   const legendHeight = 60
 
   // DISTANCES & TIMES
@@ -96,7 +96,7 @@ font-size: 40px
   const lineLength = 400
   const taxiStartY = 200
   const rideStartY = 120
-  const lineStartX = 500
+  const lineStartX = 460
 
   const finishLineLength = 20
 
@@ -255,7 +255,7 @@ SVG.append('text')
           .classed('rideTimer', true)
           .text('T = ' + twoDecimalDigits(elapsed/1000))
 
-        console.log(elapsed);
+        // console.log(elapsed);
         if (elapsed > rideTime) rideTimer.stop();
       });
 
@@ -276,7 +276,7 @@ SVG.append('text')
           .classed('taxiTimer', true)
           .text('T = ' + twoDecimalDigits(elapsed/1000))
 
-        console.log(elapsed);
+        // console.log(elapsed);
         if (elapsed > taxiTime) taxiTimer.stop();
       });
 
@@ -298,7 +298,7 @@ SVG.append('text')
           .classed('rideDistanceTimer', true)
           .text('D = ' + twoDecimalDigits(rideDistanceTimerScale(elapsed)))
 
-        console.log(elapsed);
+        // console.log(elapsed);
         if (elapsed > rideTime) rideDistanceTimer.stop();
       });
 
@@ -320,7 +320,7 @@ SVG.append('text')
           .classed('taxiDistanceTimer', true)
           .text('D = ' + twoDecimalDigits(taxiDistanceTimerScale(elapsed)))
 
-        console.log(elapsed);
+        // console.log(elapsed);
         if (elapsed > taxiTime) taxiDistanceTimer.stop();
       });
 
@@ -336,21 +336,21 @@ SVG.append('text')
   const legendCars = SVG.append('rect')
     .attr('width', legendWidth)
     .attr('height', legendHeight)
-    .attr('x', innerWidth-50)
+    .attr('x', innerWidth-70)
     .attr('y', innerHeight/2)
     .classed('legendBorder', true)
 
     // ADDING LEGEND TEXT
   SVG.append('text')
     .attr('y', innerHeight/2 + legendHeight/3 +5)
-    .attr('x', innerWidth-45)
+    .attr('x', innerWidth-65)
     .text('🚙 RideShares')
     .style('fill','black')
     .classed('legendText', true)
 
   SVG.append('text')
     .attr('y', innerHeight/2 + legendHeight*2/3 +5)
-    .attr('x', innerWidth-45)
+    .attr('x', innerWidth-65)
     .text('🚕 Taxi')
     .style('fill','black')
     .classed('legendText', true)
@@ -360,21 +360,21 @@ SVG.append('text')
   const legendTimeDistance = SVG.append('rect')
     .attr('width', legendWidth)
     .attr('height', legendHeight)
-    .attr('x', innerWidth-50)
+    .attr('x', innerWidth-70)
     .attr('y', innerHeight/4)
     .classed('legendBorder', true)
 
   SVG.append('text')
     .attr('y', innerHeight/4 + legendHeight/3 +5)
-    .attr('x', innerWidth-45)
-    .text('D = Distance')
+    .attr('x', innerWidth-65)
+    .text('D = Distance (miles)')
     .style('fill','black')
     .classed('legendText', true)
 
   SVG.append('text')
     .attr('y', innerHeight/4 + legendHeight*2/3 +5)
-    .attr('x', innerWidth-45)
-    .text('T = Time')
+    .attr('x', innerWidth-65)
+    .text('T = Time (x100 sec.)')
     .style('fill','black')
     .classed('legendText', true)
 
