@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<style type="text/css">
+
+svg {
+  border:1px solid black;
+}
+
+text {
+  font-family: "Helvetica Neue" 
+}
+
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 10px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
+  
+/* RIDESHARE Styles */
+  
+.rideCar {
+/*  fill: blue;
+  stroke: black;*/
+  font-size: 40px
+}
+
+/* TAXI Styles */
+  
+.taxiCar {
+/*  fill: yellow;
+  stroke: black;*/
+
+font-size: 40px
+
+}
+
+.taxiLine {
+  /*removes black fill*/
+  fill: none;
+  /*styles line */
+  stroke: darkgray;
+  stroke-width: 3   ;
+}
+
+.legendBorder {
+  fill: white;
+  stroke: black;
+}
+
+</style>
+
+<body>
+  <div>
+    <input name="alterButton" 
+           type="button" 
+           value="Go!" 
+           onclick="goCars()" />
+    </div>
+</body>
+
+<script>
+  
+  const parseTime = d3.timeParse("%m/%Y");
+  const margin = {top: 35, right: 30, bottom: 40, left: 60};
+  const outerWidth = 700;
+  const outerHeight = 350;
+  const innerWidth = outerWidth - margin.left - margin.right;
+  const innerHeight = outerHeight - margin.top - margin.bottom;
+  const transitionTime = 1000;
+  const radius = 5;
+  const legendWidth = 150
+  const legendHeight = 60
+
+  // DISTANCES & TIMES
+  const taxiTime = 9000
+  const taxiDistance = 3.68
+  const rideTime = 11000
+  const rideDistance = 6.26
+
+  // TIMER VARIABLES
+  let twoDecimalDigits = d3.format(".2f");
+
+  // LINE VARIABLES
+  const lineLength = 400
+  const taxiStartY = 200
+  const rideStartY = 120
+  const lineStartX = 460
+
+  const finishLineLength = 20
+
+  // CAR VARIABLES
+  const carHeight = 6
+  const carWidth = 40
+
+  let xScale = d3.scaleLinear()
+                  .domain([0, d3.max([taxiDistance,rideDistance])])
+                  .range([0, lineLength])
+
+
+
+  
+  const SVG = d3.select("body").append("svg")
+    .attr("width", outerWidth)
+    .attr("height", outerHeight);  
+
+  // Legend title
+  SVG.append("text")
+      .attr('x', innerWidth/2)
+      .attr("y", margin.top/2)
+      .text("Taxi Trips are, on average, Shorter & Slower")
+      .attr("text-anchor", "middle")
+
+  // ---------------------------//
+  //         TRACKS             //
+  // ---------------------------//
+     
+// TAXI LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", taxiStartY)      // y position of the first end of the line
+    .attr("x2", lineStartX-xScale(taxiDistance))     // x position of the second end of the line
+    .attr("y2", taxiStartY);
+
+
+// RIDE LINE
+ 
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX-xScale(rideDistance))     // x position of the first end of the line
+    .attr("y1", rideStartY)      // y position of the first end of the line
+    .attr("x2", lineStartX) // x position of the second end of the line
+    .attr("y2", rideStartY);
+
+
+
+  // ---------------------------//
+  //  START & FINISH LINES      //
+  // ---------------------------//
+
+// TAXI START LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX- xScale(taxiDistance))     // x position of the first end of the line
+    .attr("y1", taxiStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX - xScale(taxiDistance))     // x position of the second end of the line
+    .attr("y2", taxiStartY+finishLineLength/2);
+
+// TAXI FINISH LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", taxiStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX)     // x position of the second end of the line
+    .attr("y2", taxiStartY+finishLineLength/2);
+
+// RIDE START LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX)     // x position of the first end of the line
+    .attr("y1", rideStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX)     // x position of the second end of the line
+    .attr("y2", rideStartY+finishLineLength/2);
+
+// RIDE FINISH LINE
+
+SVG.append("line")          // attach a line
+    .style("stroke", "black")  // colour the line
+    .attr("x1", lineStartX - xScale(rideDistance))     // x position of the first end of the line
+    .attr("y1", rideStartY-finishLineLength/2)      // y position of the first end of the line
+    .attr("x2", lineStartX - xScale(rideDistance))     // x position of the second end of the line
+    .attr("y2", rideStartY+finishLineLength/2);
+
+  // ---------------------------//
+  //         CARS               //
+  // ---------------------------//
+
+// TAXI CAR
+
+SVG.append('text')
+    .attr('x', lineStartX)
+    .attr('y', taxiStartY - carHeight/2)
+    .text('🚕')
+    .classed('taxiCar',true)
+
+SVG.append('text')
+    .attr('x', lineStartX)
+    .attr('y', rideStartY - carHeight/2)
+    .text('🚙')
+    .classed('rideCar',true)
+
+  // ---------------------------//
+  //         ANIMATION          //
+  // ---------------------------//
+
+  function goCars() {
+
+    // TAXI GO
+
+      SVG.select('.taxiCar')
+          .attr('x', lineStartX)
+
+      SVG.select('.taxiCar')
+            .transition()
+            .duration(taxiTime)
+            .ease(d3.easeLinear)
+            .attr('x', lineStartX - xScale(taxiDistance) )
+
+    // RIDE GO
+
+      SVG.select('.rideCar')
+          .attr('x', lineStartX )
+
+      SVG.select('.rideCar')
+            .transition()
+            .duration(rideTime)
+            .ease(d3.easeLinear)
+            .attr('x', lineStartX - xScale(rideDistance))
+
+
+
+  // ---------------------------//
+  //         TIMERS             //
+  // ---------------------------//
+
+  // RIDE TIME
+    let rideTimerScale = d3.scaleLinear()
+                            .domain([0, rideTime])
+                            .range([0, xScale(rideDistance)])
+
+
+    let rideTimer = d3.timer(function(elapsed) {
+
+      SVG.select('.rideTimer').remove()
+
+      SVG.append('text')
+          .attr('x', lineStartX - rideTimerScale(elapsed))
+          .attr('y', rideStartY - 60)
+          .classed('rideTimer', true)
+          .text('T = ' + twoDecimalDigits(elapsed/1000))
+
+        // console.log(elapsed);
+        if (elapsed > rideTime) rideTimer.stop();
+      });
+
+  // TAXI TIME
+
+    let taxiTimerScale = d3.scaleLinear()
+                            .domain([0, taxiTime])
+                            .range([0, xScale(taxiDistance)])
+
+
+    let taxiTimer = d3.timer(function(elapsed) {
+
+      SVG.select('.taxiTimer').remove()
+
+      SVG.append('text')
+          .attr('x', lineStartX - taxiTimerScale(elapsed))
+          .attr('y', taxiStartY + 40)
+          .classed('taxiTimer', true)
+          .text('T = ' + twoDecimalDigits(elapsed/1000))
+
+        // console.log(elapsed);
+        if (elapsed > taxiTime) taxiTimer.stop();
+      });
+
+  // RIDE DISTANCE
+
+    let rideDistanceTimerScale = d3.scaleLinear()
+                            .domain([0, rideTime])
+                            .range([0, rideDistance])
+
+
+    let rideDistanceTimer = d3.timer(function(elapsed) {
+
+      SVG.select('.rideDistanceTimer').remove()
+
+      SVG.append('text')
+
+          .attr('x', lineStartX - xScale(rideDistanceTimerScale(elapsed)))
+          .attr('y', rideStartY - 40)
+          .classed('rideDistanceTimer', true)
+          .text('D = ' + twoDecimalDigits(rideDistanceTimerScale(elapsed)))
+
+        // console.log(elapsed);
+        if (elapsed > rideTime) rideDistanceTimer.stop();
+      });
+
+  // TAXI DISTANCE
+
+    let taxiDistanceTimerScale = d3.scaleLinear()
+                            .domain([0, taxiTime])
+                            .range([0, taxiDistance])
+
+
+    let taxiDistanceTimer = d3.timer(function(elapsed) {
+
+      SVG.select('.taxiDistanceTimer').remove()
+
+      SVG.append('text')
+
+          .attr('x', lineStartX - xScale(taxiDistanceTimerScale(elapsed)))
+          .attr('y', taxiStartY + 60)
+          .classed('taxiDistanceTimer', true)
+          .text('D = ' + twoDecimalDigits(taxiDistanceTimerScale(elapsed)))
+
+        // console.log(elapsed);
+        if (elapsed > taxiTime) taxiDistanceTimer.stop();
+      });
+
+  
+  }
+
+
+  // ---------------------------//
+  //         LEGEND             //
+  // ---------------------------//
+
+  // LEGEND WITH CARS
+  const legendCars = SVG.append('rect')
+    .attr('width', legendWidth)
+    .attr('height', legendHeight)
+    .attr('x', innerWidth-70)
+    .attr('y', innerHeight/2)
+    .classed('legendBorder', true)
+
+    // ADDING LEGEND TEXT
+  SVG.append('text')
+    .attr('y', innerHeight/2 + legendHeight/3 +5)
+    .attr('x', innerWidth-65)
+    .text('🚙 RideShares')
+    .style('fill','black')
+    .classed('legendText', true)
+
+  SVG.append('text')
+    .attr('y', innerHeight/2 + legendHeight*2/3 +5)
+    .attr('x', innerWidth-65)
+    .text('🚕 Taxi')
+    .style('fill','black')
+    .classed('legendText', true)
+
+
+    // LEGEND WITH TIME & DISTANCE
+  const legendTimeDistance = SVG.append('rect')
+    .attr('width', legendWidth)
+    .attr('height', legendHeight)
+    .attr('x', innerWidth-70)
+    .attr('y', innerHeight/4)
+    .classed('legendBorder', true)
+
+  SVG.append('text')
+    .attr('y', innerHeight/4 + legendHeight/3 +5)
+    .attr('x', innerWidth-65)
+    .text('D = Distance (miles)')
+    .style('fill','black')
+    .classed('legendText', true)
+
+  SVG.append('text')
+    .attr('y', innerHeight/4 + legendHeight*2/3 +5)
+    .attr('x', innerWidth-65)
+    .text('T = Time (x100 sec.)')
+    .style('fill','black')
+    .classed('legendText', true)
+
+
+
+
+</script>
+

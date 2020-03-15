@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<style type="text/css">
+
+svg {
+  border:1px solid black;
+}
+ 
+
+
+text {
+  font-family: "Helvetica Neue" 
+}
+
+.titleText {
+  font-size: : "Helvetica Neue" 
+}
+
+.axis line {
+  stroke-width:1px;
+  stroke: #ccc;
+  stroke-dasharray: 2px 2px;
+}
+
+.axis text {
+  font-size: 10px;
+  fill: #777;
+}
+
+.axis path {
+  display: none;
+}
+  
+/* RIDESHARE Styles */
+  
+.rideCar {
+/*  fill: blue;
+  stroke: black;*/
+  font-size: 5px
+}
+
+/* TAXI Styles */
+  
+.taxiCar {
+/*  fill: yellow;
+  stroke: black;*/
+
+font-size: 5px
+
+}
+
+.legend {
+  fill: white;
+  stroke: black;
+}
+
+</style>
+
+<body>
+  <div>
+    <input name="alterButton" 
+           type="button" 
+           value="Go!" 
+           onclick="goCars()" />
+    </div>
+</body>
+
+<script>
+  
+  const margin = {top: 40, right: 30, bottom: 10, left: 5};
+  const outerWidth = 600;
+  const outerHeight = 750;
+  const innerWidth = outerWidth - margin.left - margin.right;
+  const innerHeight = outerHeight - margin.top - margin.bottom;
+  const transitionTime = 1000;
+  const radius = 2;
+  const legendWidth = 100
+  const legendHeight = 60
+
+  const durationTime = 800
+
+  
+  const SVG = d3.select("body").append("svg")
+    .attr("width", outerWidth)
+    .attr("height", outerHeight);  
+
+  // Legend title
+  SVG.append("text")
+      .attr('x', margin.left)
+      .attr("y", margin.top/2)
+      .text("In October alone, there were ")
+      .classed('titleText', true)
+
+  SVG.append("text")
+    .attr('x', margin.left)
+    .attr("y", margin.top)
+    .text("9.5 million ride shares ")
+    .classed('titleText', true)
+
+    SVG.append("text")
+    .attr('x', margin.left)
+    .attr("y", margin.top*3/2)
+    .text("vs. 1.45 million taxi trips")
+    .classed('titleText', true)
+
+    // X AXIS LABEL
+  SVG.append("text")             
+    .attr("transform",
+          "translate(" + (innerWidth/2) + " ," + 
+                         (outerHeight - margin.bottom + 5) + ")")
+    .style("text-anchor", "middle")
+    .text("🚕 = 🚙 = 1,000 Trips");
+
+  // ---------------------------//
+  //         DEFINING DATA      //
+  // ---------------------------//
+     
+// TAXI DATA
+
+let numberColumns = 40
+let numberTaxiRows = 36 / 2
+let taxiData = []
+
+for (let outerStep = 1; outerStep <= numberTaxiRows; outerStep++){
+
+  for (let step = 1; step <= numberColumns; step++) {
+    taxiData.push({column:step, row:outerStep})
+  }
+
+}
+// Adding the leftover 10 cars
+for (let i = 1; i <=10; i++){
+  taxiData.push({column:i, row:numberTaxiRows+1})
+}
+
+// RIDE DATA
+
+let numberRideRows = 238 / 2
+let rideData = []
+
+for (let outerStep = 1; outerStep <= numberRideRows; outerStep++){
+
+  for (let step = 1; step <= numberColumns; step++) {
+    rideData.push({column:step, row:outerStep})
+  }
+
+}
+// Adding the leftover 10 cars
+for (let i = 1; i <=10; i++){
+  rideData.push({column:i, row:numberRideRows+1})
+}
+
+
+
+  // ---------------------------//
+  //         ANIMATION          //
+  // ---------------------------//
+
+function goCars() {
+
+// TAXIS
+
+SVG.selectAll('.taxiCar').remove()
+
+SVG.selectAll('.taxiCar')
+    .data(taxiData)
+    .enter()
+    .append('text')
+    .attr('y', (d) => innerHeight +margin.top -10 - d.row*6)
+    .attr('x', -20)
+    .text('🚕')
+    .classed('taxiCar',true)
+
+SVG.selectAll('.taxiCar')
+    .data(taxiData)
+    .transition()
+    .duration(durationTime)
+    .delay((d, i) => i*2)
+    .ease(d3.easeQuadIn)
+    .attr('x',(d) => d.column*6.5)
+
+// RIDES    
+
+SVG.selectAll('.rideCar').remove()
+
+SVG.selectAll('.rideCar')
+    .data(rideData)
+    .enter()
+    .append('text')
+    .attr('y', (d) => innerHeight +margin.top -10 - d.row*6)
+    .attr('x', outerWidth+20)
+    .text('🚙')
+    .classed('rideCar',true)
+
+SVG.selectAll('.rideCar')
+    .data(rideData)
+    .transition()
+    .duration(durationTime)
+    .delay((d, i) => i*2)
+    .ease(d3.easeQuadIn)
+    .attr('x',(d) => outerWidth - 50 - d.column*6.5)
+
+}
+
+
+</script>
+
