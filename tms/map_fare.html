@@ -4,6 +4,7 @@
 
 <div id="legend"></div>
 
+
 <style>
 
 .background {
@@ -22,6 +23,18 @@
 
 .colorLegend {
    font-family: Helvetica
+}
+
+.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 60px;
+  height: 12px;
+  padding: 8px;
+  margin-top: -20px;
+  font: 10px sans-serif;
+  background: #ddd;
+  pointer-events: none;
 }
 
 path {
@@ -81,18 +94,69 @@ svg.append('rect')
   .attr('width', width)
   .attr('height', height)
 
-var g = svg.append('g');
+var tooltip = d3.select("body")
+    .append("div")
+    .style("display", "none")
+    .attr("class", "tooltip")
+    .style("width", "80px")
+    .style("height", "40px")
+    .style("position", "absolute")
+    .style("margin-top", "-20px")
+    .style("text-align", "top")
+    .style("background-color", "white")
+    .style("opacity", ".90")
+    .style("padding", "1px");
+
+var mouseover = function(d) {
+    tooltip
+    .style("display", "inline");
+  }
+
+var mousemove_taxi = function(d) {
+
+
+    tooltip
+    //.html(days[d.day] + " " + times[d.hour]+ "<br>" + d3.format(",")(d.count) + " rides " + "<br>"+ d.value)
+      .html("Tract ID: "+d.properties["name10"]+"<br>"+"Pickup: $"+d3.round(d.properties["Average Taxi Pickup Fare"],2)
+      +"<br>"+"Dropoff: $"+d3.round(d.properties["Average Taxi Dropoff Fare"],2))
+      .style("left", (d3.event.pageX + 15) + "px")
+      .style("top", (d3.event.pageY + 10) + "px")
+  }
+
+
+  var mousemove_rideshare = function(d) {
+
+
+      tooltip
+      //.html(days[d.day] + " " + times[d.hour]+ "<br>" + d3.format(",")(d.count) + " rides " + "<br>"+ d.value)
+        .html("Tract ID: "+d.properties["name10"]+"<br>"+"Pickup: $"+d3.round(d.properties["Average Rideshare Pickup Fare"],2)
+        +"<br>"+"Dropoff: $"+d3.round(d.properties["Average Rideshare Dropoff Fare"],2))
+        .style("left", (d3.event.pageX + 15) + "px")
+        .style("top", (d3.event.pageY + 10) + "px")
+    }
+
+var mouseleave = function(d) {
+  tooltip.style("display", "none")
+  }
+
+var g = svg.append('g')
+
+
 var g2 = svg.append('g');
 
 var mapLayer_taxi = g.append('g')
   .classed('map-layer', true)
   .attr("id", "mapLayer_taxi")
+  .call(d3.behavior.zoom().on("zoom", function () {
+                svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+            }))
 
 var mapLayer_rideshare = g2.append('g')
   .classed('map-layer', true)
   .attr("id", "mapLayer_rideshare")
 
-d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
+
+d3.json('fare_heatmap_downtown.geojson', function(error,mapData) {
   //Taxi Data first
   var center = d3.geo.centroid(mapData)
   var features = mapData.features;
@@ -110,7 +174,7 @@ d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
     r_dropoff.push(features[i].properties["Average Rideshare Dropoff Fare"])
   }
   var max_fare = d3.max(t_pickup)
-  var min_fare = 7
+  var min_fare = 5
   console.log(max_fare)
   // Add a scale for color
   var myColor = d3.scale.log().domain([min_fare,max_fare])
@@ -121,16 +185,19 @@ d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
   var projection = d3.geo.mercator().scale(scale).center(center)
     .translate(offset);
 
+
   var path = d3.geo.path().projection(projection);
 
+
   var bounds  = path.bounds(mapData);
+
   var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
   var vscale  = scale*height / (bounds[1][1] - bounds[0][1]);
   var scale   = (hscale < vscale) ? hscale : vscale;
-  var scale   = scale*.7
+  var scale   = scale*0.5
   //var scale   = 150000
-  var offset  = [width - (bounds[0][0] + bounds[1][0])/2,
-    height - (bounds[0][1] + bounds[1][1])/2];
+  var offset  = [width - (bounds[0][0] + bounds[1][0])/2+250,
+    height - (bounds[0][1] + bounds[1][1])/2  +590];
 
   projection = d3.geo.mercator().center(center)
     .scale(scale).translate(offset);
@@ -142,6 +209,9 @@ d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
     .style("fill", function (d) {return myColor(d.properties["Average Taxi Pickup Fare"]);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove_taxi)
+    .on("mouseleave", mouseleave);
 
   var center = d3.geo.centroid(mapData)
   var features = mapData.features;
@@ -156,9 +226,9 @@ d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
   var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
   var vscale  = scale*height / (bounds[1][1] - bounds[0][1]);
   var scale   = (hscale < vscale) ? hscale : vscale;
-  var scale   = scale*.7
-  var offset  = [width - (bounds[0][0] + bounds[1][0])/2,
-    height - (bounds[0][1] + bounds[1][1])/2];
+  var scale   = scale*.5
+  var offset  = [width - (bounds[0][0] + bounds[1][0])/2+200,
+    height - (bounds[0][1] + bounds[1][1])/2  +590];
 
   projection = d3.geo.mercator().center(center)
     .scale(scale).translate(offset);
@@ -171,6 +241,9 @@ d3.json('fare_heatmap_chicagoAll.geojson', function(error,mapData) {
     .style("fill", function (d) { console.log(d.properties); return myColor(d.properties["Average Rideshare Pickup Fare"]);} )
     .style("stroke-width", "1")
     .style("stroke", "black")
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove_rideshare)
+    .on("mouseleave", mouseleave);
 
 
 var current = "pickup"
@@ -178,7 +251,6 @@ var current = "pickup"
         return function(){
           current = current=="pickup" ? "dropoff" : "pickup";
           if (current=="pickup"){
-		  console.log(d3.select('#mapLayer_taxi').selectAll("path"))
                   d3.select('#mapLayer_taxi').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Taxi Pickup Fare"]);})
           	  d3.select('#mapLayer_rideshare').selectAll("path").style("fill",function(d) {return myColor(d.properties["Average Rideshare Pickup Fare"]);})
 		  d3.select('#taxi_title').text("Fare of Pickups - Taxis")
@@ -254,7 +326,7 @@ var current = "pickup"
        .attr("id","taxi_avg")
        .style("fill",'#08306B')
        .attr("font-family", "Helvetica")
-       .text("As of 1/6/20, a surcharge of $1.75 to rideshares in the downtown area on weekday trips.")
+       .text("As of 1/6/20, a surcharge of $1.75 added to rideshares in the downtown area on weekday trips.")
 
 
  var datasetpicker = d3.select("#dataset-picker")
