@@ -1,94 +1,10 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-
-
-<div id="legend"></div>
-
-
-<style>
-
-.background {
-  fill: #fff;
-  pointer-events: all;
-}
-
-.map-layer {
-  fill: #fff;
-  stroke: #aaa;
-}
-
-.text{
-  font-family: Helvetica
-}
-
-.colorLegend {
-   font-family: Helvetica
-}
-
-.tooltip {
-  position: absolute;
-  text-align: center;
-  width: 60px;
-  height: 12px;
-  padding: 8px;
-  margin-top: -20px;
-  font: 10px sans-serif;
-  background: #ddd;
-  pointer-events: none;
-}
-
-path {
-  fill: #ccc;
-  stroke: #fff;
-  stroke-width: .5px;
-}
-
-circle {
-  fill: #fff;
-  fill-opacity: 0.4;
-  stroke: #111;
-}
-
-path.active {
-  fill: pink;
-}
-circle.active {
-  fill: blue;
-}
-.dataset-button {
-  background-color: #08306B;
-  border: 2px solid #08306B;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  font-family: Helvetica;
-  display: inline-block;
-  border-radius: 8px;
-  font-size: 20px;
-}
-
-
-</style>
-<body>
-<div id="dataset-picker"></div>
-<div id="charts"></div>
-
-<div>
-<a href="map_pct.html" class = "dataset-button">Previous: Proportions by geographic area</a>
-    <a href="Racing.html" class = "dataset-button">Return to beginning: Distance & duration</a>
-  </div>
-
-<script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="http://d3js.org/topojson.v0.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/d3-legend/1.1.0/d3-legend.js"></script>
 <script>
 
 var width = 960,
   height = 520,
   centered;
 
-var svg = d3.select("#charts").append("svg")
+var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height)
     .attr("id","maps");
@@ -362,7 +278,6 @@ var current = "pickup"
   svg.append("g")
     .attr("transform", "translate(700, 300)")
     .attr("id","legend")
-    .style("font-family", "Helvetica")
     .call(colorLegend);
 
   svg.append("text")

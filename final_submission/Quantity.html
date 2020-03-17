@@ -6,10 +6,20 @@
 <style type="text/css">
 
 svg {
-  border:1px solid black;
+ /* border:1px solid black;*/
 }
  
-
+.dataset-button {
+        background-color: #08306B; 
+        border: 2px solid #08306B;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        font-family: Helvetica neue;
+        display: inline-block;
+        border-radius: 8px;
+        font-size: 20px;
+      }
 
 text {
   font-family: "Helvetica Neue" 
@@ -64,8 +74,14 @@ font-size: 5px
     <input name="alterButton" 
            type="button" 
            value="Go!" 
+           class = "dataset-button"
            onclick="goCars()" />
     </div>
+    <div id = "chart"></div>
+    <div>
+    <a href="Racing.html" class = "dataset-button">Previous: Speed & distance</a>
+    <a href="heatmap-combined.html" class = "dataset-button">Next: Time of day</a>
+  </div>
 </body>
 
 <script>
@@ -83,7 +99,7 @@ font-size: 5px
   const durationTime = 800
 
   
-  const SVG = d3.select("body").append("svg")
+  const SVG = d3.select("#chart").append("svg")
     .attr("width", outerWidth)
     .attr("height", outerHeight);  
 

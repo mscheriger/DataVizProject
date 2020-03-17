@@ -50,6 +50,12 @@ circle.active {
 </style>
 <body>
 <div id="dataset-picker"></div>
+<div id="charts"></div>
+
+<div>
+<a href="map_rawcounts.html" class = "dataset-button">Previous: Counts by geographic area</a>
+    <a href="map_fare.html" class = "dataset-button">Next: Downtown tax</a>
+  </div>
 
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v0.min.js"></script>
@@ -61,7 +67,7 @@ var width = 960,
   height = 500,
   centered;
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#charts").append("svg")
     .attr("width", width)
     .attr("height", height)
     .attr("id","maps");
@@ -226,6 +232,7 @@ var current = "pickup"
   svg.append("g")
     .attr("transform", "translate(700, 300)")
     .attr("id","legend")
+    .style("font-family", "Helvetica")
     .call(colorLegend);
 
   svg.append("text")

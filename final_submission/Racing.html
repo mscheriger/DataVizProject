@@ -5,12 +5,36 @@
 
 <style type="text/css">
 
+.dataset-button {
+        background-color: #08306B; 
+        border: 2px solid #08306B;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        font-family: Helvetica neue;
+        display: inline-block;
+        border-radius: 8px;
+        font-size: 20px;
+      }
+
 svg {
-  border:1px solid black;
+  /* border:1px solid black; */
 }
 
 text {
-  font-family: "Helvetica Neue" 
+  font-family: "Helvetica" 
+}
+
+h1 {
+  font-family: "Helvetica" 
+}
+
+h2 {
+  font-family: "Helvetica" 
+}
+
+a {
+  font-family: "Helvetica" 
 }
 
 .axis line {
@@ -56,18 +80,25 @@ font-size: 40px
 
 .legendBorder {
   fill: white;
-  stroke: black;
+  /*stroke: black; */
 }
 
 </style>
 
 <body>
+  <h1>Welcome to our data visualization comparing taxi and rideshare use in Chicago! </h1>
+  <div><text> The following charts will display different views to help you explore & understand how taxi and rideshare use varies across Chicago. Our data is adapted from the <a href = "https://data.cityofchicago.org">Chicago Data Portal</a>'s <a href="https://data.cityofchicago.org/Transportation/Transportation-Network-Providers-Trips/m6dm-c72p">Rideshare</a> and <a href = "https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew">Taxi</a> datasets. The data is from October 2019. Click the "next" and "previous" buttons at the bottom of the page to navigate between visualizations. Buttons at the top of the page control the visualizations on that page. Click "Go!" to begin. </text> </div>
   <div>
     <input name="alterButton" 
            type="button" 
            value="Go!" 
+           class = "dataset-button"
            onclick="goCars()" />
     </div>
+    <div id = "chart"></div>
+    <div>
+    <a href="Quantity.html" class = "dataset-button">Next: Quantity</a>
+  </div>
 </body>
 
 <script>
@@ -111,7 +142,7 @@ font-size: 40px
 
 
   
-  const SVG = d3.select("body").append("svg")
+  const SVG = d3.select("#chart").append("svg")
     .attr("width", outerWidth)
     .attr("height", outerHeight);  
 
@@ -119,7 +150,7 @@ font-size: 40px
   SVG.append("text")
       .attr('x', innerWidth/2)
       .attr("y", margin.top/2)
-      .text("Taxi Trips are, on average, Shorter & Slower")
+      .text("Taxi trips are shorter & slower on average")
       .attr("text-anchor", "middle")
 
   // ---------------------------//
@@ -344,7 +375,7 @@ SVG.append('text')
   SVG.append('text')
     .attr('y', innerHeight/2 + legendHeight/3 +5)
     .attr('x', innerWidth-65)
-    .text('🚙 RideShares')
+    .text('🚙 Rideshares')
     .style('fill','black')
     .classed('legendText', true)
 
